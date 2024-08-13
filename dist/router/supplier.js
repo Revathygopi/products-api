@@ -5,4 +5,7 @@ const supplier_1 = require("../controller/supplier");
 const router = (0, express_1.Router)();
 router.post('/addsuppliers', supplier_1.addSupplier);
 router.get('/getSupplier', supplier_1.getSupplier);
+router.get('/getsupplier/:id', supplier_1.getsupplierbyid);
+router.put('/supplier/:id', supplier_1.updatesupplier);
+router.delete('/supplier/:id', supplier_1.deletesupplier);
 exports.default = router;

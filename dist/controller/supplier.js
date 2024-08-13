@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSupplier = exports.addSupplier = void 0;
+exports.deletesupplier = exports.updatesupplier = exports.getsupplierbyid = exports.getSupplier = exports.addSupplier = void 0;
 const db_1 = __importDefault(require("../db"));
 const addSupplier = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, address, GSTN, products } = req.body;
@@ -29,11 +29,50 @@ exports.addSupplier = addSupplier;
 const getSupplier = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield db_1.default.query('SELECT * FROM Supplier_list');
-        const products = result.rows;
-        res.status(200).json(products);
+        const supplier = result.rows;
+        res.status(200).json(supplier);
     }
     catch (error) {
         res.status(500).json({ error: error });
     }
 });
 exports.getSupplier = getSupplier;
+const getsupplierbyid = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const result = yield db_1.default.query('SELECT * FROM Supplier_list WHERE id = $1', [id]);
+        const supplier = result.rows[0];
+        res.status(200).json(supplier);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+exports.getsupplierbyid = getsupplierbyid;
+const updatesupplier = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    const { name, address, GSTN, products } = req.body;
+    try {
+        const result = yield db_1.default.query('UPDATE Supplier_list SET name= $1, address = $2, GSTN = $3, products = $4  WHERE id = $5  RETURNING *', [name, address, GSTN, JSON.stringify(products), id]);
+        const supplier = result.rows[0];
+        res.status(200).json(supplier);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Canot able to update the supplier' });
+    }
+});
+exports.updatesupplier = updatesupplier;
+const deletesupplier = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const result = yield db_1.default.query('DELETE FROM Supplier_list WHERE id = $1 RETURNING *', [id]);
+        res.status(200).json("Supplier deleted succesfully");
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Canot able to delete the supplier' });
+    }
+});
+exports.deletesupplier = deletesupplier;

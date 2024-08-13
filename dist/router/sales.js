@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const sales_1 = require("../controller/sales");
+const router = (0, express_1.Router)();
+router.post('/sales-ledger', sales_1.addSalesLedger);
+router.get('/sales-ledgers', sales_1.getAllSalesLedgers);
+router.get('/sales-ledger/:id', sales_1.getSalesLedgerById);
+router.put('/sales-ledger/:id', sales_1.updateSalesLedger);
+router.delete('/sales-ledger/:id', sales_1.deleteSalesLedger);
+exports.default = router;
