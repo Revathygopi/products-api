@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import productRoutes from './router/product';
 import supplierRoutes from './router/supplier';
 import purchaseLedgerRoutes from './router/purchase_ledger';
@@ -11,6 +12,7 @@ const PORT =  5000;
 const app = express();
 
 app.use(express.json());
+app.use(cors())
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api', productRoutes);
 app.use('/api', supplierRoutes);
