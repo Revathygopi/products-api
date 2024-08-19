@@ -64,7 +64,7 @@ export const deletepurchaseitem = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const result = await pool.query('delete * from Purchaseds_items where id = $1 returning *', [id])
-    res.status(200).send("Purchased item deleted succesfully")
+    res.status(200).json({mesaage:"Purchased item deleted succesfully"})
   }
   catch (error) {
     console.log(error);

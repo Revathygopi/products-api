@@ -68,7 +68,7 @@ const deletesupplier = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { id } = req.params;
     try {
         const result = yield db_1.default.query('DELETE FROM Supplier_list WHERE id = $1 RETURNING *', [id]);
-        res.status(200).json("Supplier deleted succesfully");
+        res.status(200).json({ meassage: "Supplier deleted succesfully" });
     }
     catch (error) {
         console.log(error);

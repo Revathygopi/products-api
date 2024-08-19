@@ -15,9 +15,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deletesalesitem = exports.updatesalesitem = exports.getsalesitemsbyid = exports.getsalesitems = exports.addsalesItem = void 0;
 const db_1 = __importDefault(require("../db"));
 const addsalesItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { salesId, productId, qty, GST, total, discount, subtotal } = req.body;
+    const { salesLedgerId, productId, qty, GST, total, discount, subtotal } = req.body;
     try {
-        const result = yield db_1.default.query('INSERT INTO Sales_item (sales_ledger_id, product_id, qty, GST, total, discount, subtotal) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', [salesId, productId, qty, GST, total, discount, subtotal]);
+        const result = yield db_1.default.query('INSERT INTO Sales_item (sales_ledger_id, product_id, qty, GST, total, discount, subtotal) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', [salesLedgerId, productId, qty, GST, total, discount, subtotal]);
         const salesItem = result.rows[0];
         res.status(201).json(salesItem);
     }
@@ -54,9 +54,9 @@ const getsalesitemsbyid = (req, res) => __awaiter(void 0, void 0, void 0, functi
 exports.getsalesitemsbyid = getsalesitemsbyid;
 const updatesalesitem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const { salesId, productId, qty, GST, total, discount, subtotal } = req.body;
+    const { salesLedgerId, productId, qty, GST, total, discount, subtotal } = req.body;
     try {
-        const result = yield db_1.default.query('update Sales_item set salesId = $1, productId = $2, qty = $3, GST = $4, total = $5, discount = $6, subtotal = $7 where id = $8  returning *', [salesId, productId, qty, GST, total, discount, subtotal, id]);
+        const result = yield db_1.default.query('update Sales_item set sales_ledger_id = $1, product_id = $2, qty = $3, GST = $4, total = $5, discount = $6, subtotal = $7 where id = $8  returning *', [salesLedgerId, productId, qty, GST, total, discount, subtotal, id]);
         const products = result.rows[0];
         res.status(200).json(products);
     }
@@ -69,8 +69,8 @@ exports.updatesalesitem = updatesalesitem;
 const deletesalesitem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
-        const result = yield db_1.default.query('delete * from Sales_item where id = $1 returning *', [id]);
-        res.status(200).send("sales item deleted succesfully");
+        const result = yield db_1.default.query('delete  from Sales_item where id = $1 returning *', [id]);
+        res.status(200).json({ meassage: "sales item deleted succesfully" });
     }
     catch (error) {
         console.log(error);

@@ -70,7 +70,7 @@ const deletepurchaseitem = (req, res) => __awaiter(void 0, void 0, void 0, funct
     const { id } = req.params;
     try {
         const result = yield db_1.default.query('delete * from Purchaseds_items where id = $1 returning *', [id]);
-        res.status(200).send("Purchased item deleted succesfully");
+        res.status(200).json({ mesaage: "Purchased item deleted succesfully" });
     }
     catch (error) {
         console.log(error);
