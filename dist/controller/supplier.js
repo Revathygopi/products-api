@@ -15,9 +15,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deletesupplier = exports.updatesupplier = exports.getsupplierbyid = exports.getSupplier = exports.addSupplier = void 0;
 const db_1 = __importDefault(require("../db"));
 const addSupplier = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, address, GSTN, products } = req.body;
+    const { name, address, gstn, products } = req.body;
     try {
-        const result = yield db_1.default.query('INSERT INTO Supplier_list (name, address, GSTN, products) VALUES ($1, $2, $3, $4) RETURNING *', [name, address, GSTN, JSON.stringify(products)]);
+        const result = yield db_1.default.query('INSERT INTO Supplier_list (name, address, gstn, products) VALUES ($1, $2, $3, $4) RETURNING *', [name, address, gstn, JSON.stringify(products)]);
         const supplier = result.rows[0];
         res.status(201).json(supplier);
     }
@@ -52,9 +52,9 @@ const getsupplierbyid = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.getsupplierbyid = getsupplierbyid;
 const updatesupplier = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const { name, address, GSTN, products } = req.body;
+    const { name, address, gstn, products } = req.body;
     try {
-        const result = yield db_1.default.query('UPDATE Supplier_list SET name= $1, address = $2, GSTN = $3, products = $4  WHERE id = $5  RETURNING *', [name, address, GSTN, JSON.stringify(products), id]);
+        const result = yield db_1.default.query('UPDATE Supplier_list SET name= $1, address = $2, GSTN = $3, products = $4  WHERE id = $5  RETURNING *', [name, address, gstn, JSON.stringify(products), id]);
         const supplier = result.rows[0];
         res.status(200).json(supplier);
     }

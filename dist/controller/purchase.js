@@ -17,27 +17,32 @@ const db_1 = __importDefault(require("../db"));
 const format = require('pg-format');
 const addPurchaseLedger = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { supplierId, invoiceDate, GSTN, items } = req.body;
+    const client = yield db_1.default.connect();
     try {
-        yield db_1.default.query('BEGIN');
+        yield client.query('BEGIN');
         const ledgerValues = [[supplierId, invoiceDate, GSTN]];
         const ledgerQuery = format('INSERT INTO Purchase_ledger (supplier_id, invoice_date, GSTN) VALUES %L RETURNING id', ledgerValues);
-        const ledgerResult = yield db_1.default.query(ledgerQuery);
+        const ledgerResult = yield client.query(ledgerQuery);
         const purchaseLedgerId = ledgerResult.rows[0].id;
         const itemPromises = items.map((item) => __awaiter(void 0, void 0, void 0, function* () {
             const itemValues = [purchaseLedgerId, item.productId, item.qty, item.GST, item.total, item.discount, item.subtotal];
             const itemQuery = format('INSERT INTO Purchaseds_items (purchase_ledger_id, product_id, qty, GST, total, discount, subtotal) VALUES %L', [itemValues]);
-            yield db_1.default.query(itemQuery);
+            yield client.query(itemQuery);
             const stockUpdateQuery = 'UPDATE Stock_items SET stock_count = stock_count + $1 WHERE product_id = $2';
-            yield db_1.default.query(stockUpdateQuery, [item.qty, item.productId]);
+            const productUpdateQuery = 'UPDATE Product_list SET size = size::integer + $1 WHERE id = $2';
+            yield client.query(productUpdateQuery, [item.qty, item.productId]);
         }));
         yield Promise.all(itemPromises);
-        yield db_1.default.query('COMMIT');
+        yield client.query('COMMIT');
         res.status(201).json({ message: 'Purchase ledger and items created successfully.', id: purchaseLedgerId });
     }
     catch (error) {
-        yield db_1.default.query('ROLLBACK');
+        yield client.query('ROLLBACK');
         console.error('Error adding purchase ledger:', error);
         res.status(500).json({ error: 'Purchase ledger and items could not be created' });
+    }
+    finally {
+        client.release();
     }
 });
 exports.addPurchaseLedger = addPurchaseLedger;

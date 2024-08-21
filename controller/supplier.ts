@@ -3,12 +3,12 @@ import pool from '../db';
 import { Supplier } from '../models/supplier';
 
 export const addSupplier = async (req: Request, res: Response) => {
-  const { name, address, GSTN, products } = req.body;
+  const { name, address, gstn, products } = req.body;
 
   try {
     const result = await pool.query(
-      'INSERT INTO Supplier_list (name, address, GSTN, products) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, address, GSTN, JSON.stringify(products)]
+      'INSERT INTO Supplier_list (name, address, gstn, products) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, address, gstn, JSON.stringify(products)]
     );
     const supplier: Supplier = result.rows[0];
     res.status(201).json(supplier);
@@ -43,10 +43,10 @@ export const getsupplierbyid = async (req: Request, res: Response) => {
 };
 export const updatesupplier = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, address, GSTN, products } = req.body;
+  const { name, address, gstn, products } = req.body;
   try {
     const result = await pool.query('UPDATE Supplier_list SET name= $1, address = $2, GSTN = $3, products = $4  WHERE id = $5  RETURNING *',
-      [name, address, GSTN, JSON.stringify(products),id])
+      [name, address, gstn, JSON.stringify(products),id])
     const supplier: Supplier = result.rows[0];
     res.status(200).json(supplier)
   }

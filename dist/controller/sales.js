@@ -44,7 +44,11 @@ const getAllSalesLedgers = (req, res) => __awaiter(void 0, void 0, void 0, funct
     try {
         const ledgerResult = yield db_1.default.query('select * from Sales_ledger');
         const salesLedgers = ledgerResult.rows;
-        res.status(200).json(salesLedgers);
+        const results = yield Promise.all(salesLedgers.map((ledger) => __awaiter(void 0, void 0, void 0, function* () {
+            const itemsResult = yield db_1.default.query('SELECT * FROM Sales_item WHERE sales_ledger_id = $1', [ledger.id]);
+            return Object.assign(Object.assign({}, ledger), { items: itemsResult.rows });
+        })));
+        res.status(200).json(results);
     }
     catch (error) {
         console.log(error);

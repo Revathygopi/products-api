@@ -20,13 +20,13 @@ export const addProduct = (req: Request, res: Response) => {
       return res.status(500).json({ error: err.message });
     }
 
-    const { name, qtyType, size } = req.body;
+    const { name, qtytype, size, price,gst } = req.body;
     const imageUrl = req.file?.path || '';
 
     try {
       const result = await pool.query(
-        'INSERT INTO Product_list (name, qtyType, size, imageUrl) VALUES ($1, $2, $3, $4) RETURNING *',
-        [name, qtyType, size, imageUrl]
+        'INSERT INTO Product_list (name, qtytype, size, price,gst, imageUrl) VALUES ($1, $2, $3, $4, $5,$6) RETURNING *',
+        [name, qtytype, size,price,gst, imageUrl]
       );
       const product: Product = result.rows[0];
       res.status(201).json(product);
@@ -64,14 +64,14 @@ export const updateproduct = async (req: Request, res: Response) => {
       return res.status(500).json({ error: err.message });
     }
 
-    const { name, qtyType, size } = req.body;
+    const { name, qtytype, size,price,gst } = req.body;
     const { id } = req.params;
     const imageUrl = req.file?.path || req.body.imageUrl;
 
     try {
       const result = await pool.query(
-        'Update  Product_list set name = $1, qtyType = $2, size = $3, imageUrl = $4 where id = $5 RETURNING *',
-        [name, qtyType, size, imageUrl, id]
+        'Update  Product_list set name = $1, qtytype = $2, size = $3, price = $4, gst = $5, imageUrl = $6 where id = $7 RETURNING *',
+        [name, qtytype, size, price, gst,imageUrl, id]
       );
       const product: Product = result.rows[0];
       res.status(200).json(product);

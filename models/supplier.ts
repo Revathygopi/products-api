@@ -4,6 +4,6 @@ export interface Supplier {
   id: number;
   name: string;
   address: string;
-  GSTN: string;
+  gstn: string;
   products: Product[];
 }

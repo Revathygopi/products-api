@@ -8,29 +8,37 @@ const format = require('pg-format');
 export const addPurchaseLedger = async (req: Request, res: Response) => {
   const { supplierId, invoiceDate, GSTN, items } = req.body;
 
+  const client = await pool.connect();
   try {
-    await pool.query('BEGIN');
+    await client.query('BEGIN');
+
     const ledgerValues = [[supplierId, invoiceDate, GSTN]];
     const ledgerQuery = format('INSERT INTO Purchase_ledger (supplier_id, invoice_date, GSTN) VALUES %L RETURNING id', ledgerValues);
-    const ledgerResult = await pool.query(ledgerQuery);
+    const ledgerResult = await client.query(ledgerQuery);
     const purchaseLedgerId = ledgerResult.rows[0].id;
     const itemPromises = items.map(async (item: any) => {
       const itemValues = [purchaseLedgerId, item.productId, item.qty, item.GST, item.total, item.discount, item.subtotal];
       const itemQuery = format('INSERT INTO Purchaseds_items (purchase_ledger_id, product_id, qty, GST, total, discount, subtotal) VALUES %L', [itemValues]);
-      await pool.query(itemQuery);
+      await client.query(itemQuery);
+      
       const stockUpdateQuery = 'UPDATE Stock_items SET stock_count = stock_count + $1 WHERE product_id = $2';
-      await pool.query(stockUpdateQuery, [item.qty, item.productId]);
+      const productUpdateQuery = 'UPDATE Product_list SET size = size::integer + $1 WHERE id = $2';
+await client.query(productUpdateQuery, [item.qty, item.productId]);
+
     });
 
     await Promise.all(itemPromises);
 
-    await pool.query('COMMIT');
+
+    await client.query('COMMIT');
 
     res.status(201).json({ message: 'Purchase ledger and items created successfully.', id: purchaseLedgerId });
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error('Error adding purchase ledger:', error);
     res.status(500).json({ error: 'Purchase ledger and items could not be created' });
+  } finally {
+    client.release();
   }
 };
 

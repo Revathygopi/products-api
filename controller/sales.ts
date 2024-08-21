@@ -36,7 +36,14 @@ export const getAllSalesLedgers = async (req: Request, res: Response) => {
   try {
     const ledgerResult = await pool.query('select * from Sales_ledger');
     const salesLedgers = ledgerResult.rows;
-    res.status(200).json(salesLedgers);
+    const results = await Promise.all(salesLedgers.map(async (ledger: any) => {
+      const itemsResult = await pool.query('SELECT * FROM Sales_item WHERE sales_ledger_id = $1', [ledger.id]);
+      return {
+        ...ledger,
+        items: itemsResult.rows
+      };
+    }));
+    res.status(200).json(results);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Cannot get sales ledgers' });

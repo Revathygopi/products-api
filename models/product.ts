@@ -1,7 +1,7 @@
 export interface Product {
     id: number;
     name: string;
-    qtyType: string;
+    qtytype: string;
     size: string;
     imageUrl: string;
   }
