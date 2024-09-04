@@ -17,8 +17,9 @@ const db_1 = __importDefault(require("../db"));
 const format = require('pg-format');
 const addSalesLedger = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { mobile, customerName, adhar, address, invoiceDate, GSTN, items } = req.body;
+    const client = yield db_1.default.connect();
     try {
-        yield db_1.default.query('BEGIN');
+        yield client.query('BEGIN');
         const ledgerValues = [[mobile, customerName, adhar, address, invoiceDate, GSTN]];
         const ledgerQuery = format('insert into Sales_ledger (mobile, customer_name, adhar, address, invoice_date, GSTN) values %L returning id', ledgerValues);
         const ledgerResult = yield db_1.default.query(ledgerQuery);
@@ -28,27 +29,45 @@ const addSalesLedger = (req, res) => __awaiter(void 0, void 0, void 0, function*
             const itemQuery = format('insert into Sales_item (sales_ledger_id, product_id, qty, GST, total, discount, subtotal) values %L', [itemValues]);
             yield db_1.default.query(itemQuery);
             const stockUpdateQuery = 'UPDATE Stock_items SET stock_count = stock_count - $1 WHERE product_id = $2';
-            yield db_1.default.query(stockUpdateQuery, [item.qty, item.productId]);
+            yield client.query(stockUpdateQuery, [item.qty, item.productId]);
+            const productUpdateQuery = 'UPDATE Product_list SET size = size::integer - $1 WHERE id = $2';
+            yield client.query(productUpdateQuery, [item.qty, item.productId]);
         }));
         yield Promise.all(itemPromises);
-        yield db_1.default.query('COMMIT');
-        res.status(201).json({ message: 'Sales ledger and items created successfully.' });
+        yield client.query('COMMIT');
+        res.status(201).json({ message: 'Sales ledger and items created successfully.', id: salesLedgerId });
     }
     catch (error) {
+        yield client.query('ROLLBACK');
         console.error(error);
         res.status(500).json({ error: 'Sales ledger and items are not created' });
+    }
+    finally {
+        client.release();
     }
 });
 exports.addSalesLedger = addSalesLedger;
 const getAllSalesLedgers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { page = '1', limit = '10' } = req.query;
+    const currentPage = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 10;
+    const offset = (currentPage - 1) * pageSize;
     try {
-        const ledgerResult = yield db_1.default.query('select * from Sales_ledger');
+        const countResult = yield db_1.default.query('select count(*) from Sales_ledger');
+        const totalItems = parseInt(countResult.rows[0].count, 10);
+        const totalPages = Math.ceil(totalItems / pageSize);
+        const ledgerResult = yield db_1.default.query('select * from Sales_ledger limit $1 offset $2', [pageSize, offset]);
         const salesLedgers = ledgerResult.rows;
         const results = yield Promise.all(salesLedgers.map((ledger) => __awaiter(void 0, void 0, void 0, function* () {
             const itemsResult = yield db_1.default.query('SELECT * FROM Sales_item WHERE sales_ledger_id = $1', [ledger.id]);
             return Object.assign(Object.assign({}, ledger), { items: itemsResult.rows });
         })));
-        res.status(200).json(results);
+        res.status(200).json({ currentPage: page,
+            pageSize: pageSize,
+            totalItems: totalItems,
+            totalPages: totalPages,
+            data: results
+        });
     }
     catch (error) {
         console.log(error);

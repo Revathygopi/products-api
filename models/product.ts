@@ -4,5 +4,7 @@ export interface Product {
     qtytype: string;
     size: string;
     imageUrl: string;
+    gst:number;
+    price:number;
   }
   

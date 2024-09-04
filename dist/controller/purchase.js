@@ -29,6 +29,7 @@ const addPurchaseLedger = (req, res) => __awaiter(void 0, void 0, void 0, functi
             const itemQuery = format('INSERT INTO Purchaseds_items (purchase_ledger_id, product_id, qty, GST, total, discount, subtotal) VALUES %L', [itemValues]);
             yield client.query(itemQuery);
             const stockUpdateQuery = 'UPDATE Stock_items SET stock_count = stock_count + $1 WHERE product_id = $2';
+            yield client.query(stockUpdateQuery, [item.qty, item.productId]);
             const productUpdateQuery = 'UPDATE Product_list SET size = size::integer + $1 WHERE id = $2';
             yield client.query(productUpdateQuery, [item.qty, item.productId]);
         }));
@@ -47,14 +48,27 @@ const addPurchaseLedger = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.addPurchaseLedger = addPurchaseLedger;
 const getAllPurchaseLedgers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { page = '1', limit = '10' } = req.query;
+    const currentPage = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 10;
+    const offset = (currentPage - 1) * pageSize;
     try {
-        const ledgerResult = yield db_1.default.query('SELECT * FROM Purchase_ledger');
+        const countResult = yield db_1.default.query('select count(*) from purchase_ledger');
+        const totalItems = parseInt(countResult.rows[0].count, 10);
+        const totalPages = Math.ceil(totalItems / pageSize);
+        const ledgerResult = yield db_1.default.query('SELECT * FROM Purchase_ledger limit $1 offset $2', [pageSize, offset]);
         const purchaseLedgers = ledgerResult.rows;
         const results = yield Promise.all(purchaseLedgers.map((ledger) => __awaiter(void 0, void 0, void 0, function* () {
             const itemsResult = yield db_1.default.query('SELECT * FROM Purchaseds_items WHERE purchase_ledger_id = $1', [ledger.id]);
             return Object.assign(Object.assign({}, ledger), { items: itemsResult.rows });
         })));
-        res.status(200).json(results);
+        res.status(200).json({
+            currentPage: page,
+            pageSize: pageSize,
+            totalItems: totalItems,
+            totalPages: totalPages,
+            data: results
+        });
     }
     catch (error) {
         console.error('Error retrieving purchase ledgers with items:', error);

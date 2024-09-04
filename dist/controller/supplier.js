@@ -27,10 +27,23 @@ const addSupplier = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.addSupplier = addSupplier;
 const getSupplier = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { search = '', page = '1', limit = '10' } = req.query;
+    const currentPage = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 10;
+    const offset = (currentPage - 1) * pageSize;
     try {
-        const result = yield db_1.default.query('SELECT * FROM Supplier_list');
+        const countResult = yield db_1.default.query('select count(*) from Supplier_list where name ilike $1', [`%${search}%`]);
+        const totalItems = parseInt(countResult.rows[0].count, 10);
+        const totalPages = Math.ceil(totalItems / pageSize);
+        const result = yield db_1.default.query('SELECT * FROM Supplier_list   where name ilike $1 limit $2 offset $3', [`%${search}%`, pageSize, offset]);
         const supplier = result.rows;
-        res.status(200).json(supplier);
+        res.status(200).json({
+            currentPage: page,
+            pageSize: pageSize,
+            totalItems: totalItems,
+            totalPages: totalPages,
+            supplier
+        });
     }
     catch (error) {
         res.status(500).json({ error: error });

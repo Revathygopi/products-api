@@ -18,14 +18,28 @@ export const addSupplier = async (req: Request, res: Response) => {
 };
 
 export const getSupplier = async (req: Request, res: Response) => {
+  const {search = '', page = '1',limit = '10'}=req.query;
+  const currentPage = parseInt(page as string)||1;
+  const pageSize = parseInt(limit as string)||10;
+  const offset = (currentPage-1)*pageSize;
   try {
-    const result = await pool.query('SELECT * FROM Supplier_list');
+    const countResult = await pool.query('select count(*) from Supplier_list where name ilike $1',[`%${search}%`]);
+    const totalItems = parseInt(countResult.rows[0].count,10);
+    const totalPages = Math.ceil(totalItems/pageSize)
+    const result = await pool.query('SELECT * FROM Supplier_list   where name ilike $1 limit $2 offset $3',[`%${search}%`,pageSize,offset]);
     const supplier = result.rows;
-    res.status(200).json(supplier);
+    res.status(200).json({
+      currentPage: page,
+      pageSize: pageSize,
+      totalItems: totalItems,
+      totalPages: totalPages,
+      supplier
+    });
   } catch (error) {
     res.status(500).json({ error: error });
   }
 };
+
 export const getsupplierbyid = async (req: Request, res: Response) => {
   const { id } = req.params;
 
